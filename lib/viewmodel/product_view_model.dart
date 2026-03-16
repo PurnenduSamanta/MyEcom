@@ -27,6 +27,7 @@ class ProductViewModel extends ChangeNotifier {
         .where((product) => product.title.toLowerCase().contains(lowerQuery))
         .toList();
   }
+
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String get searchQuery => _searchQuery;
@@ -52,7 +53,9 @@ class ProductViewModel extends ChangeNotifier {
   double get grandTotal => subtotal + tax;
 
   Future<void> init() async {
-    _productsSubscription ??= _repository.watchLocalProducts().listen((products) {
+    _productsSubscription ??= _repository.watchLocalProducts().listen((
+      products,
+    ) {
       _products
         ..clear()
         ..addAll(products);
@@ -69,12 +72,7 @@ class ProductViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final connectivityResults = await Connectivity().checkConnectivity();
-    final hasNetwork = connectivityResults.any(
-      (result) => result != ConnectivityResult.none,
-    );
-
-    if (!hasNetwork) {
+    if (!await hasNetwork()) {
       if (_products.isEmpty) {
         _isLoading = false;
         _errorMessage = 'No internet connection. Please try again.';
@@ -157,6 +155,13 @@ class ProductViewModel extends ChangeNotifier {
     _productsSubscription?.cancel();
     unawaited(_repository.close());
     super.dispose();
+  }
+
+  Future<bool> hasNetwork() async {
+    final connectivityResults = await Connectivity().checkConnectivity();
+    return connectivityResults.any(
+      (result) => result != ConnectivityResult.none,
+    );
   }
 }
 
