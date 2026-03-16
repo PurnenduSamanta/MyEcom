@@ -9,7 +9,10 @@ import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp,DeviceOrientation.portraitDown]);
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(const EcomMiniApp());
 }
 
@@ -18,7 +21,7 @@ class EcomMiniApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appDatabase = AppDatabase();
+    final appDatabase = AppDatabase.instance;
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(

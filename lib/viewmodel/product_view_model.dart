@@ -11,22 +11,27 @@ class ProductViewModel extends ChangeNotifier {
   final ProductRepository _repository;
   StreamSubscription<List<Product>>? _productsSubscription;
 
-  final List<Product> _allProducts = [];
-  List<Product> _visibleProducts = [];
-  final Map<int, _CartLine> _cartLines = {};
+  final List<Product> _products = [];
+  final Map<int, CartItem> _cartLines = {};
 
   bool _isLoading = false;
   String? _errorMessage;
   String _searchQuery = '';
 
-  List<Product> get products => _visibleProducts;
+  List<Product> get products {
+    final lowerQuery = _searchQuery.trim().toLowerCase();
+    if (lowerQuery.isEmpty) {
+      return List<Product>.from(_products);
+    }
+    return _products
+        .where((product) => product.title.toLowerCase().contains(lowerQuery))
+        .toList();
+  }
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String get searchQuery => _searchQuery;
   bool get isCartEmpty => _cartLines.isEmpty;
-  List<CartItem> get cartItems => _cartLines.values
-      .map((line) => CartItem(product: line.product, quantity: line.quantity))
-      .toList();
+  List<CartItem> get cartItems => _cartLines.values.toList(growable: false);
   int get totalCartUnits {
     var total = 0;
     for (final line in _cartLines.values) {
@@ -48,10 +53,9 @@ class ProductViewModel extends ChangeNotifier {
 
   Future<void> init() async {
     _productsSubscription ??= _repository.watchLocalProducts().listen((products) {
-      _allProducts
+      _products
         ..clear()
         ..addAll(products);
-      _applyFilter(_searchQuery, notify: false);
       if (_errorMessage != null && products.isNotEmpty) {
         _errorMessage = null;
       }
@@ -71,7 +75,7 @@ class ProductViewModel extends ChangeNotifier {
     );
 
     if (!hasNetwork) {
-      if (_allProducts.isEmpty) {
+      if (_products.isEmpty) {
         _isLoading = false;
         _errorMessage = 'No internet connection. Please try again.';
         notifyListeners();
@@ -90,7 +94,7 @@ class ProductViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     } catch (_) {
-      if (_allProducts.isEmpty) {
+      if (_products.isEmpty) {
         _isLoading = false;
         _errorMessage = 'Failed to load products. Please try again.';
         notifyListeners();
@@ -103,14 +107,18 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void search(String query) {
-    _searchQuery = query;
-    _applyFilter(query);
+    final normalizedQuery = query.trim();
+    if (_searchQuery == normalizedQuery) {
+      return;
+    }
+    _searchQuery = normalizedQuery;
+    notifyListeners();
   }
 
   void addToCart(Product product) {
     final existing = _cartLines[product.id];
     if (existing == null) {
-      _cartLines[product.id] = _CartLine(product: product, quantity: 1);
+      _cartLines[product.id] = CartItem(product: product, quantity: 1);
     } else {
       existing.quantity += 1;
     }
@@ -144,21 +152,6 @@ class ProductViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _applyFilter(String query, {bool notify = true}) {
-    final lowerQuery = query.trim().toLowerCase();
-    if (lowerQuery.isEmpty) {
-      _visibleProducts = List<Product>.from(_allProducts);
-    } else {
-      _visibleProducts = _allProducts
-          .where((product) => product.title.toLowerCase().contains(lowerQuery))
-          .toList();
-    }
-
-    if (notify) {
-      notifyListeners();
-    }
-  }
-
   @override
   void dispose() {
     _productsSubscription?.cancel();
@@ -171,14 +164,7 @@ class CartItem {
   CartItem({required this.product, required this.quantity});
 
   final Product product;
-  final int quantity;
+  int quantity;
 
   double get lineTotal => product.price * quantity;
-}
-
-class _CartLine {
-  _CartLine({required this.product, required this.quantity});
-
-  final Product product;
-  int quantity;
 }

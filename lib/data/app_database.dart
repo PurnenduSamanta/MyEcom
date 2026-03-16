@@ -12,7 +12,20 @@ part 'dao/product_dao.dart';
 
 @DriftDatabase(tables: [ProductItems], daos: [ProductDao])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  // Private constructor
+  AppDatabase._internal() : super(_openConnection());
+
+  static AppDatabase? _instance;
+
+  /// Provide a single shared instance of [AppDatabase].
+  ///
+  /// Usage: `final db = AppDatabase.instance;`
+  static AppDatabase get instance {
+    if (_instance == null) {
+      _instance = AppDatabase._internal();
+    }
+    return _instance!;
+  }
 
   @override
   int get schemaVersion => 2;
