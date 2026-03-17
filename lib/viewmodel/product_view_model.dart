@@ -8,25 +8,17 @@ import 'package:flutter/foundation.dart';
 class ProductViewModel extends ChangeNotifier {
   ProductViewModel(this._repository);
 
+  static const String allCategory = "All";
+
   final ProductRepository _repository;
   StreamSubscription<List<Product>>? _productsSubscription;
 
   final List<Product> _products = [];
   final Map<int, CartItem> _cartLines = {};
-
+  String _selectedProductCategory = allCategory;
   bool _isLoading = false;
   String? _errorMessage;
   String _searchQuery = '';
-
-  List<Product> get products {
-    final lowerQuery = _searchQuery.trim().toLowerCase();
-    if (lowerQuery.isEmpty) {
-      return List<Product>.from(_products);
-    }
-    return _products
-        .where((product) => product.title.toLowerCase().contains(lowerQuery))
-        .toList();
-  }
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -51,6 +43,32 @@ class ProductViewModel extends ChangeNotifier {
 
   double get tax => subtotal * 0.12;
   double get grandTotal => subtotal + tax;
+
+  String get selectedProductCategory => _selectedProductCategory;
+
+  List<String> get categories {
+    List<String> categories = [];
+    categories.add(allCategory);
+    _products.forEach((product) {
+      if (!categories.contains(product.category)) {
+        categories.add(product.category);
+      }
+    });
+    return categories;
+  }
+
+  List<Product> get products {
+    final lowerQuery = _searchQuery.trim().toLowerCase();
+    return _products.where((product) {
+      bool matchedSearch =
+          (searchQuery.isEmpty ||
+          product.title.toLowerCase().contains(lowerQuery));
+      bool matchedCategory =
+          (_selectedProductCategory == allCategory ||
+          product.category == _selectedProductCategory);
+      return matchedSearch && matchedCategory;
+    }).toList();
+  }
 
   Future<void> init() async {
     _productsSubscription ??= _repository.watchLocalProducts().listen((
@@ -110,6 +128,14 @@ class ProductViewModel extends ChangeNotifier {
       return;
     }
     _searchQuery = normalizedQuery;
+    notifyListeners();
+  }
+
+  void setCategory(String category) {
+    if (selectedProductCategory == category) {
+      return;
+    }
+    _selectedProductCategory = category;
     notifyListeners();
   }
 

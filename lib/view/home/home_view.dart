@@ -1,6 +1,7 @@
 import 'package:ecom_mini/view/cart/cart_view.dart';
 import 'package:ecom_mini/view/product/product_detail_view.dart';
 import 'package:ecom_mini/viewmodel/product_view_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -65,18 +66,65 @@ class _HomeViewState extends State<HomeView> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: [
-                TextField(
-                  controller: _searchController,
-                  onChanged: (value) {
-                    viewModel.search(value);
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Search by title',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) {
+                          viewModel.search(value);
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search by title',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      tooltip: 'Filter by category',
+                      onSelected: (value) {
+                        viewModel.setCategory(value);
+                      },
+                      itemBuilder: (context) {
+                        final List<PopupMenuEntry<String>> items = [];
+                        for (final category in viewModel.categories) {
+                          final bool isSelected =
+                              category == viewModel.selectedProductCategory;
+                          items.add(
+                            PopupMenuItem<String>(
+                              value: category,
+                              child: Row(
+                                children: [
+                                  Expanded(child: Text(category)),
+                                  if (isSelected)
+                                    const Icon(
+                                      Icons.check,
+                                      color: Colors.green,
+                                      size: 18,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
+                        return items;
+                      },
+                      child: Container(
+                        height: 48,
+                        width: 48,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.filter_list),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 Expanded(child: _buildBody(viewModel)),
