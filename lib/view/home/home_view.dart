@@ -1,7 +1,6 @@
 import 'package:ecom_mini/view/cart/cart_view.dart';
 import 'package:ecom_mini/view/product/product_detail_view.dart';
 import 'package:ecom_mini/viewmodel/product_view_model.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -47,6 +46,13 @@ class _HomeViewState extends State<HomeView> {
             builder: (context, viewModel, widget) {
               return IconButton(
                 onPressed: () {
+                  if (viewModel.totalCartUnits == 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Your cart is empty')),
+                    );
+                    return;
+                  }
+                  FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.of(
                     context,
                   ).push(MaterialPageRoute(builder: (_) => const CartView()));
@@ -161,6 +167,7 @@ class _HomeViewState extends State<HomeView> {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => ProductDetailView(product: product),

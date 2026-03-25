@@ -21,9 +21,9 @@ class _CartViewState extends State<CartView> {
     final viewModel = context.read<ProductViewModel>();
     if (viewModel.isCartEmpty || _isCheckoutInProgress) {
       if (viewModel.isCartEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Your cart is empty')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Your cart is empty')));
       }
       return;
     }
@@ -54,9 +54,9 @@ class _CartViewState extends State<CartView> {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CheckoutSuccessView()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CheckoutSuccessView()));
 
     if (!mounted) {
       return;
@@ -118,11 +118,10 @@ class _CartViewState extends State<CartView> {
                                         child: Image.network(
                                           item.product.image,
                                           fit: BoxFit.contain,
-                                          errorBuilder: (_, _, _) =>
-                                              const Icon(
-                                                Icons.broken_image,
-                                                size: 28,
-                                              ),
+                                          errorBuilder: (_, _, _) => const Icon(
+                                            Icons.broken_image,
+                                            size: 28,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(width: 12),
@@ -276,9 +275,7 @@ class _CartViewState extends State<CartView> {
                                   value: _checkoutProgress,
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
-                                  '${(_checkoutProgress * 100).toInt()}%',
-                                ),
+                                Text('${(_checkoutProgress * 100).toInt()}%'),
                               ],
                             ),
                           ),
